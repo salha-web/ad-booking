@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Checkout</h2>
+    <p>Total Amount: <b>Tsh.{{ total_amount|intcomma }}/=</b></p>
+
+    <form method="POST" action="{% url 'process_checkout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn bg-gradient-warning">
+            <b class="text-dark">Confirm and Generate Invoice</b>
+        </button>
+    </form>
+</div>
+{% endblock %}

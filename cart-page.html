@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+    <div class="container mt-5 pb-3">
+        <h2>Your Cart</h2>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Ad Position</th>
+                <th>Size</th>
+                <th>Price(Tsh.)</th>
+                <th>Quantity</th>
+                <th>Total(Tsh.)</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.ad.position }}</td>
+                    <td>{{ item.ad.size }}</td>
+                    <td>{{ item.ad.price|intcomma }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger update-quantity" data-id="{{ item.id }}"
+                                data-action="decrease">-
+                        </button>
+                        <span id="quantity-{{ item.id }}">{{ item.quantity }}</span>
+                        <button class="btn btn-sm btn-success update-quantity" data-id="{{ item.id }}"
+                                data-action="increase">+
+                        </button>
+                    </td>
+                    <td>{{ item.total|intcomma }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger update-quantity" data-id="{{ item.id }}"
+                                data-action="delete"> <i class="fa fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">Your cart is empty.</td>
+                </tr>
+            {% endfor %}
+            {% if cart_items %}
+                <tr>
+                    <td colspan="4">Total</td>
+                    <td colspan="1">{{ total_amount|intcomma }}</td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+
+        {% if cart_items %}
+            <a href="{% url 'checkout' %}" class="btn bg-gradient-warning text-dark btn-lg">
+                <b>Proceed to Checkout</b>
+            </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        $(document).on('click', '.update-quantity', function () {
+            const itemId = $(this).data('id');
+            const action = $(this).data('action');
+
+            $.post('{% url "update_cart" %}', {
+                    'item_id': itemId,
+                    'action': action,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                function (response) {
+                    if (response.success) {
+                        location.reload();
+                    }
+                });
+        });
+    </script>
+{% endblock %}

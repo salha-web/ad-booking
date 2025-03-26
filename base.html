@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mwananchi Ads Portal</title>
+    <link rel="stylesheet" href="{% static 'css/map.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Custom fonts for this template-->
+    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+</head>
+<body class="bg-light">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-gradient-warning sticky-top">
+    <a class="navbar-brand" href="{% url 'landing' %}"><b class="text-dark">Mwananchi Ads Booking</b></a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link " href="{% url 'landing' %}"><b class="text-dark">Home</b></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'cart_page' %}">
+                    <b class="text-dark">
+                        Cart <span id="cart-item-count" class="badge badge-light cart-item-count-qnty"></span>
+                    </b>
+                </a>
+            </li>
+            {% if user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <b class="text-dark">{{ user.username }}</b>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'invoice_list' %}">
+                        <b class="text-dark">My Invoice</b>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'checkout' %}">
+                        <b class="text-dark">Checkout</b>
+                    </a>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="modal" data-target="#auth">
+                        <b class="text-dark">Login</b>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+        <form class="form-inline ml-3" action="{% url 'landing' %}" method="GET">
+            <div style="position: relative;">
+                <input class="form-control mr-sm-2"
+                       id="position-input"
+                       type="text"
+                       name="q"
+                       placeholder="Search Position"
+                       autocomplete="off">
+
+                <!-- Suggestion Box -->
+                <div id="suggestions" class="suggestions-box"></div>
+            </div>
+            <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </div>
+</nav>
+<div class="container bg-white pt-1 pb-2">
+
+    <center>
+        <img src="{% static 'images/image001.jpg' %}" alt="" width="100%">
+    </center>
+    {% block content %}
+    {% endblock content %}
+</div>
+<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{% static 'js/map.js' %}"></script>
+
+<!-- Page level plugins -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+
+    $(document).ready(function () {
+        {% if request.user.is_authenticated %}
+            cart_item_count();
+            setInterval(cart_item_count, 2000)
+        {% endif %}
+    });
+
+    function create_cart() {
+        // Function to add item to cart
+        $('.add-to-cart').on('click', function () {
+            var adId = $(this).data('ad-id');
+
+            // Send the data via AJAX to add the ad to the cart
+            $.ajax({
+                url: "{% url 'add_to_cart' %}",  // Replace with your URL for adding to cart
+                method: 'POST',
+                data: {
+                    'ad_id': adId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    // Update the cart count and other details
+                    $('#cart-item-count').text(response.cart_item_count);
+                },
+                error: function (error) {
+                    console.log('Error adding item to cart.');
+                }
+            });
+        });
+    }
+
+    function filter_ads() {
+        // Handle the form changes and submit via AJAX
+        $('#filter-form').on('change', 'select, input', function () {
+            var position = $('#position').val();
+            var size = $('#size').val();
+            var minPrice = $('#min-price').val();
+            var maxPrice = $('#max-price').val();
+
+            $.ajax({
+                url: '',
+                method: 'GET',
+                data: {
+                    position: position,
+                    size: size,
+                    min_price: minPrice,
+                    max_price: maxPrice
+                },
+                success: function (response) {
+                    $('#ads-container2').html(response);
+                },
+                error: function (xhr) {
+                    console.log(xhr)
+                }
+            });
+        });
+    }
+
+    function cart_item_count() {
+        $.ajax({
+            url: '/cart-item-count',
+            method: 'GET',
+            success: function (response) {
+                $('.cart-item-count-qnty').text(response.cart_item_count);
+            },
+            error: function (xhr) {
+                console.log(xhr)
+            }
+        });
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('position-input');
+        const suggestionsBox = document.getElementById('suggestions');
+
+        // Hardcoded positions
+        const positions = ['Header', 'Sidebar', 'Footer', 'Top Banner', 'Bottom Banner'];
+
+        // Function to display suggestions
+        function showSuggestions(query) {
+            const matches = positions.filter(position =>
+                position.toLowerCase().includes(query.toLowerCase())
+            );
+
+            suggestionsBox.innerHTML = '';
+
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    const div = document.createElement('div');
+                    div.classList.add('suggestion-item');
+                    div.textContent = match;
+                    div.onclick = () => {
+                        input.value = match;
+                        suggestionsBox.style.display = 'none';
+                    };
+                    suggestionsBox.appendChild(div);
+                });
+            } else {
+                const noMatch = document.createElement('div');
+                noMatch.classList.add('suggestion-item');
+                noMatch.textContent = 'No matches found';
+                suggestionsBox.appendChild(noMatch);
+            }
+
+            suggestionsBox.style.display = 'block';
+        }
+
+        // Listen for input changes
+        input.addEventListener('input', () => {
+            const query = input.value.trim();
+            if (query) {
+                showSuggestions(query);
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+{% block script %}
+{% endblock script %}
+</body>

@@ -1,0 +1,18 @@
+{% for ad in ads %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <img src="{{ ad.thumbnail.url }}" class="card-img-top" alt="{{ ad.position }} - {{ ad.size }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ ad.position }} - {{ ad.size }}</h5>
+                <p class="card-text">Price: ${{ ad.price }}</p>
+            </div>
+            <a style="text-decoration: none" href="javascript:void(0);"
+               class="card-footer bg-primary text-white add-to-cart"
+               data-ad-id="{{ ad.id }}">
+                Add to Cart
+            </a>
+        </div>
+    </div>
+{% empty %}
+    <p>No ads available.</p>
+{% endfor %}
